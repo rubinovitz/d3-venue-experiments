@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<link rel="stylesheet" type="text/css" href="static/css/stylesheet.css" />
+<link rel="stylesheet" type="text/css" href="static/css/app2.css" />
+<style>
+
+.frame {
+  fill: none;
+  pointer-events: all;
+}
+
+.feature {
+  fill: #eee;
+  stroke: #ccc;
+}
+
+h3 {
+    text-align: center;
+    margin-top: 10px;
+}
+
+
+</style>
+<script src="js/d3.js"></script>
+<body>
+    <h3>Zoom View</h3>
+<script>
+
+var margin = {top: 0, right: 0, bottom: 0, left: 0},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var projection =  d3.geo.albersUsa();
+
+
+var path = d3.geo.path()
+    .projection(projection);
+
+var zoom = d3.behavior.zoom()
+    .translate(projection.translate())
+    .scale(projection.scale())
+    .scaleExtent([height, 40 * height])
+    .on("zoom", move);
+
+var svg = d3.select("body").append("svg")
+    .attr("width", 3000)
+    .attr("height", 3000)
+    .attr('id', "states")
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
+
+    .call(zoom);
+
+
+
+
+
+var g = svg.append("g"),
+    feature = g.selectAll(".feature");
+
+svg.append("rect")
+    .attr("class", "frame")
+    .attr("width", width)
+    .attr("height", height);
+
+        svg.append("g").attr("id", "state-centroids");
+
+
+d3.json("../data/us-states.json", function(collection) {
+  feature = feature
+      .data(collection.features)
+    .enter().append("path")
+      .attr("class", "feature")
+      .attr("d", path);
+});
+
+
+ d3.json("../static/data/categories.json", function(collection) {
+    svg.select("#state-centroids")
+      .selectAll("circle")
+        .data(collection.features
+        .sort(function(a, b) { return b.properties.venues - a.properties.venues; }))
+
+      .enter()
+      .append("circle")
+
+       
+        .attr("transform", function(d) { return "translate(" + projection(d.geometry.coordinates) + ")"; })
+        .attr("r", 5)
+        .attr('class', function(d) { return d.properties.skillset;  })
+
+     // .transition()
+      //  .duration(1000)
+      // .delay(function(d, i) { return i * 50; })
+       // .attr("r", function(d) { return 10; }); // change total classes
+  });
+
+
+    // for every feature in the collection, plot it on the us map.
+d3.json("../static/data/categories.json", function(collection) {
+  svg.select("#state-centroids")
+    .selectAll("circle")
+    
+     
+      .attr('class', function(d) { return d.properties.skillset;  })
+      .call(zoom)
+      });
+
+function move() {
+  projection.translate(d3.event.translate).scale(d3.event.scale);
+  feature.attr("d", path);
+  
+  four();
+
+}
+
+
+
+</script>
